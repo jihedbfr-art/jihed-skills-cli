@@ -33,6 +33,30 @@ def fetch_raw_skill(path: str) -> str:
         console.print(f"[bold red]Error:[/bold red] Failed to download skill content.")
         sys.exit(1)
 
+def split_frontmatter(content: str):
+    """Splits a SKILL.md into its frontmatter fields and its body.
+
+    Rendering the raw file collapses the YAML block into an unreadable paragraph, so the
+    metadata is pulled out and shown as a header instead. Only top-level scalar keys are read
+    - enough for the header, and no YAML dependency for a tool that just prints documents.
+    """
+    if not content.startswith("---"):
+        return {}, content
+
+    end = content.find("\n---", 3)
+    if end == -1:
+        return {}, content
+
+    block, body = content[3:end], content[end + 4:]
+    fields = {}
+    for line in block.splitlines():
+        if line.startswith((" ", "-")) or ":" not in line:
+            continue
+        key, _, value = line.partition(":")
+        fields[key.strip()] = value.strip().strip('"').strip("'")
+    return fields, body.lstrip("\n")
+
+
 def cmd_domains(args):
     """List all available skill domains."""
     with console.status("[bold green]Fetching domains from JihedAiLabs..."):
@@ -49,7 +73,10 @@ def cmd_domains(args):
             count += 1
             
     if count == 0:
-        console.print("[yellow]No domains found.[/yellow]")
+        console.print(
+            "[yellow]No domains returned.[/yellow] The GitHub API is used unauthenticated here "
+            "(60 requests per hour per IP), so this is usually a rate limit."
+        )
     else:
         console.print(table)
         console.print(f"Use [bold cyan]jihed-skills list <domain>[/bold cyan] to see available skills.")
@@ -69,36 +96,47 @@ def cmd_list(args):
             count += 1
             
     if count == 0:
-        console.print(f"[yellow]No skills found in '{args.domain}'.[/yellow]")
+        console.print(f"[yellow]Nothing found under '{args.domain}'.[/yellow]")
     else:
         console.print(table)
-        console.print(f"Use [bold cyan]jihed-skills read {args.domain}/{item['name']}[/bold cyan] to view the skill.")
+        console.print(
+            f"Use [bold cyan]jihed-skills read {args.domain}/<name>[/bold cyan] to view one. "
+            "A domain may group its skills one level deeper, in which case list that entry too."
+        )
 
 def cmd_read(args):
     """Read the SKILL.md of a specific skill."""
-    # Assuming user inputs domain/skill_name
-    parts = args.path.split('/')
-    if len(parts) < 2:
-        console.print("[bold red]Error:[/bold red] Path must be in format <domain>/<skill_name>")
+    clean = args.path.strip("/")
+    if "/" not in clean:
+        console.print(
+            "[bold red]Error:[/bold red] path must be <domain>/<skill>, "
+            "or deeper if the domain nests its skills."
+        )
         sys.exit(1)
-        
-    path = f"{args.path}/SKILL.md"
+
+    path = f"{clean}/SKILL.md"
     
-    with console.status(f"[bold green]Downloading {args.path}..."):
+    with console.status(f"[bold green]Downloading {clean}..."):
         content = fetch_raw_skill(path)
         
     if not content:
-        console.print(f"[bold red]Skill not found:[/bold red] {args.path}/SKILL.md")
+        console.print(f"[bold red]No SKILL.md at:[/bold red] {clean}")
         sys.exit(1)
         
-    md = Markdown(content)
-    console.print(Panel.fit("JihedAiLabs Agent-Ready Skill", border_style="green"))
-    console.print(md)
+    fields, body = split_frontmatter(content)
+    title = fields.get("title") or fields.get("name") or clean
+    header = f"[bold]{title}[/bold]"
+    if fields.get("description"):
+        header += f"\n{fields['description']}"
+    if fields.get("updated"):
+        header += f"\n[dim]updated {fields['updated']}[/dim]"
+
+    console.print(Panel.fit(header, border_style="green"))
+    console.print(Markdown(body))
 
 def main():
     parser = argparse.ArgumentParser(
-        description="JihedAiLabs CLI - Search and discover production-grade AI & Engineering skills.",
-        epilog="Architected for the autonomous enterprise."
+        description="Read the ai-skills engineering skill library from the terminal."
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
     
@@ -108,12 +146,15 @@ def main():
     
     # Subcommand: list
     parser_list = subparsers.add_parser("list", help="List skills in a specific domain.")
-    parser_list.add_argument("domain", help="The domain name (e.g., '16-ai-platforms')")
+    parser_list.add_argument("domain", help="Domain name, e.g. '05-mcp-protocol-and-tools'")
     parser_list.set_defaults(func=cmd_list)
     
     # Subcommand: read
     parser_read = subparsers.add_parser("read", help="Read a specific skill's documentation.")
-    parser_read.add_argument("path", help="The skill path (e.g., '16-ai-platforms/openai-spring-sdk')")
+    parser_read.add_argument(
+        "path",
+        help="Skill path, e.g. '05-mcp-protocol-and-tools/mcp-server-stdio-tool-schema'",
+    )
     parser_read.set_defaults(func=cmd_read)
     
     args = parser.parse_args()

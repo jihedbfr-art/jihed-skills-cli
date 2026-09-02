@@ -1,18 +1,36 @@
-# JihedAiLabs Skills CLI (`jihed-skills`)
+# jihed-skills
 
 <p align="center">
-  <b>The command-line distribution system for JihedAiLabs engineering skills.</b>
+  <b>Read the <a href="https://github.com/jihedbfr-art/ai-skills">ai-skills</a> engineering skill library from the terminal.</b>
 </p>
 
-## Overview
+<p align="center">
+  <a href="README.fr.md">🇫🇷 Lire en Français</a>
+</p>
 
-As defined in the **JihedAiLabs Top 10 World Strategy**, the `ai-skills` repository is not just a Markdown library; it is a developer tool ecosystem. This CLI allows human developers to rapidly search, list, and read production-grade engineering patterns from the terminal.
+---
 
-It parses the `ai-skills` repository in real-time.
+## What it does
 
-## Installation
+Three commands, reading the library from GitHub at call time — so what prints is the current
+version of a skill, not a copy vendored into this package.
 
-You can install this tool globally using `pipx` (recommended):
+```bash
+jihed-skills domains                                              # what exists
+jihed-skills list 05-mcp-protocol-and-tools                       # what's in a domain
+jihed-skills read 05-mcp-protocol-and-tools/mcp-server-stdio-tool-schema
+```
+
+`read` pulls the YAML frontmatter out into a header — title, description, last update — and renders
+the body as markdown, instead of printing the metadata block as a wall of text.
+
+A domain may group its skills one level deeper. When `list` shows an entry that turns out not to be
+a skill, list that entry too and read the full path.
+
+## Install
+
+Not published to PyPI. Install from source, `pipx` recommended so it lands on your PATH without
+touching your environment:
 
 ```bash
 git clone https://github.com/jihedbfr-art/jihed-skills-cli.git
@@ -20,22 +38,17 @@ cd jihed-skills-cli
 pipx install .
 ```
 
-## Usage
+## Note on rate limits
 
-List all top-level engineering domains:
-```bash
-jihed-skills domains
-```
+The GitHub API is used unauthenticated, which allows 60 requests per hour per IP. An empty result
+is usually that limit rather than an empty library, and the tool says so instead of reporting
+nothing found.
 
-List specific skills within a domain:
-```bash
-jihed-skills list 16-ai-platforms
-```
+## See also
 
-Read and inject a skill directly into your terminal (renders Markdown beautifully via `Rich`):
-```bash
-jihed-skills read 16-ai-platforms/openai-spring-sdk
-```
+[`jihed-skills-mcp`](https://github.com/jihedbfr-art/jihed-skills-mcp) serves the same library to
+agents over MCP. This one is for humans.
 
----
-*Architected for the autonomous enterprise. A JihedAiLabs project.*
+## License
+
+MIT — see [LICENSE](LICENSE).

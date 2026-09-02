@@ -5,16 +5,21 @@ build-backend = "hatchling.build"
 [project]
 name = "jihed-skills"
 version = "0.1.0"
-description = "Command Line Interface to search, discover, and install JihedAiLabs Agent-Ready Engineering Skills."
+description = "Read the ai-skills engineering skill library from the terminal."
 readme = "README.md"
+license = "MIT"
 requires-python = ">=3.9"
 authors = [
-    { name = "Jihed Ben Arfa", email = "contact@jihedailabs.dev" }
+    { name = "Jihed Ben Arfa", email = "302788711+jihedbfr-art@users.noreply.github.com" }
 ]
 dependencies = [
     "httpx>=0.27.0",
     "rich>=13.7.0"
 ]
+
+[project.urls]
+Homepage = "https://github.com/jihedbfr-art/jihed-skills-cli"
+"Skill library" = "https://github.com/jihedbfr-art/ai-skills"
 
 [project.scripts]
 jihed-skills = "jihed_skills_cli.cli:main"
