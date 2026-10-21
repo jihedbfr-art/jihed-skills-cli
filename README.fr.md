@@ -52,3 +52,22 @@ aux agents via MCP. Celui-ci est pour les humains.
 ## Licence
 
 MIT — voir [LICENSE](LICENSE).
+
+## Validation
+
+Le build déclare explicitement `src/jihed_skills_cli` : le nom du paquet distribué, `jihed-skills`, diffère de celui du module. La CI construit l’archive source et le wheel, installe le wheel et exécute sept tests hors réseau sur Ubuntu/Windows avec Python 3.9 et 3.12. Les appels HTTP des tests sont simulés ; ils ne prouvent pas la disponibilité de GitHub.
+
+```bash
+python -m pip install build twine
+python -m build
+python -m twine check --strict dist/*
+python -m unittest discover -s tests
+```
+
+---
+
+<div align="center">
+  <img src="https://raw.githubusercontent.com/jihedbfr-art/jihedbfr-art/main/assets/brand/jihedailabs-logo.svg" alt="JihedAiLabs" width="120"/>
+  <br/>
+  <sub>Un projet <a href="https://github.com/jihedbfr-art"><b>JihedAiLabs</b></a></sub>
+</div>
