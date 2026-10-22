@@ -23,3 +23,6 @@ Homepage = "https://github.com/jihedbfr-art/jihed-skills-cli"
 
 [project.scripts]
 jihed-skills = "jihed_skills_cli.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/jihed_skills_cli"]
